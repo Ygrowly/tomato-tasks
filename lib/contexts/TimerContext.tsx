@@ -128,6 +128,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(timerReducer, initialTimerState);
   const { user } = useAuth();
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
+  
+  // 使用单例模式客户端
   const supabase = createClient();
 
   // Set up the timer interval
@@ -186,8 +188,18 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     
-    // Record the pomodoro session in the database
     try {
+      // 记录番茄钟会话 - 暂时使用本地操作，实际生产环境再启用 Supabase
+      console.log('完成番茄钟', {
+        用户ID: user.id,
+        任务ID: state.currentTaskId,
+        持续时间: state.workDuration,
+        开始时间: new Date(Date.now() - state.workDuration * 60 * 1000),
+        结束时间: new Date()
+      });
+      
+      // 实际生产环境再启用 Supabase 代码
+      /* 
       await supabase.from('pomodoro_sessions').insert({
         user_id: user.id,
         task_id: state.currentTaskId,
@@ -197,16 +209,15 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         completed_at: new Date().toISOString()
       });
       
-      // Update the task's actual pomodoros count
       await supabase.rpc('increment_task_pomodoros', { 
         p_task_id: state.currentTaskId,
       });
+      */
       
-      // Dispatch the complete pomodoro action
+      // 更新番茄钟状态
       dispatch({ type: 'COMPLETE_POMODORO' });
     } catch (error) {
-      console.error('Failed to record pomodoro session:', error);
-      // Still update the local state even if the API call fails
+      console.error('番茄钟记录失败:', error);
       dispatch({ type: 'COMPLETE_POMODORO' });
     }
   };

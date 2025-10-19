@@ -1,5 +1,3 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 // 检查环境变量是否存在
@@ -28,13 +26,20 @@ const createMockServerClient = () => {
   } as unknown as SupabaseClient;
 };
 
-export function createServerSupabaseClient() {
+/**
+ * 创建服务端 Supabase 客户端
+ * 注意：在开发阶段我们使用模拟客户端，上线后需配置环境变量
+ */
+export function createServerSupabaseClient(): SupabaseClient {
   // 如果没有配置，返回模拟客户端
-  if (!hasSupabaseConfig) {
-    return createMockServerClient();
-  }
-
-  // 创建真实的服务端客户端
+  return createMockServerClient();
+  
+  // 上线时修改为：
+  // 1. 安装完整的 cookies 支持
+  // 2. 移除上面的 return
+  // 3. 取消下面代码的注释
+  
+  /* 
   const cookieStore = cookies();
   
   return createServerClient(
@@ -42,16 +47,17 @@ export function createServerSupabaseClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
+        get(name) {
+          return cookieStore.get(name)?.value
         },
-        set(name: string, value: string, options: { path: string; maxAge: number; domain?: string; sameSite?: 'lax' | 'strict' | 'none'; httpOnly?: boolean }) {
-          cookieStore.set({ name, value, ...options });
+        set(name, value, options) {
+          cookieStore.set({ name, value, ...options })
         },
-        remove(name: string, options: { path: string; domain?: string; sameSite?: 'lax' | 'strict' | 'none'; httpOnly?: boolean }) {
-          cookieStore.set({ name, value: '', ...options, maxAge: 0 });
-        },
-      },
+        remove(name, options) {
+          cookieStore.set({ name, value: '', ...options, maxAge: 0 })
+        }
+      }
     }
   );
+  */
 }
